@@ -1,21 +1,23 @@
-// Code by NiHaL 
 import { LightningElement, api, track } from 'lwc';
 
 export default class MultiselectCombobox extends LightningElement {
 
     @api label = "";
 
-    @track selectedOptions = [];                  // list of all the selected options
-    @track inputValue;                  // label that is shown in the input of the combobox
-    @track inputOptions;                // List of all the options
+    @track selectedOptions = [];                // list of all the selected options
+    @track inputValue;                          // label that is shown in the input of the combobox
+    @track inputOptions;                        // List of all the options
     
     // Flags
     @track hasRendered;
     @track comboboxIsRendered;
     @track dropDownInFocus = false;
 
-    // Disabler.. passed from the parent using setter.
-    @track _disabled = false;
+    // flags that are passed from parents.
+    @track _disabled = false;                   // Flag to know if the combobox should be disabled or not 
+    @track _pills = false;                      // Flag to know if the pills should be visible or not
+    @track _isNoSelectionAllowed = false;       // Flag to know if zero selection should be allowed in the combobox or not
+    @track _pillIcon = false;                   // Pill's Icon
 
     @api
     get disabled(){
@@ -24,6 +26,22 @@ export default class MultiselectCombobox extends LightningElement {
     set disabled(value){
         this._disabled = value;
         this.handleDisabled();
+    }
+
+    @api
+    get pills(){
+        return this._pills;
+    }
+    set pills(value){
+        this._pills = value;
+    }
+
+    @api
+    get zeroSelectionAllowed(){
+        return this._isNoSelectionAllowed;
+    }
+    set zeroSelectionAllowed(value){
+        this._isNoSelectionAllowed = value;
     }
     
     @api
@@ -34,12 +52,20 @@ export default class MultiselectCombobox extends LightningElement {
         let options = [];
         this.inputOptions = options.concat(value);
     }
+
+    @api
+    get pillIcon(){
+        return this._pillIcon;
+    }
+    set pillIcon(value){
+        this._pillIcon = value;
+    }
     
     
 
     renderedCallback() {
         if (!this.hasRendered) {
-            //  we call the logic once, when page rendered first time
+            //  we call this logic only once, when page is rendered for the first time
             this.handleDisabled();
             this.setInitialValue();
         }
@@ -59,6 +85,7 @@ export default class MultiselectCombobox extends LightningElement {
         let input = this.template.querySelector("input");
         if (input){
             input.disabled = this.disabled;
+            this._pills = this.pills && this.disabled ? !this.disabled : this._pills;  //Remove pills when disabled
         }
     }
 
@@ -77,7 +104,7 @@ export default class MultiselectCombobox extends LightningElement {
     handleSelection(event) {
         let value = event.currentTarget.dataset.value;
         let selectedListBoxOptions = this.template.querySelectorAll('.slds-is-selected');
-        if(!(selectedListBoxOptions.length === 1 && selectedListBoxOptions[0].dataset.name === value)){
+        if(!(selectedListBoxOptions.length === 1 && selectedListBoxOptions[0].dataset.name === value) || this.zeroSelectionAllowed){
             this.handleOption(event, value);
         }
         let input = this.template.querySelector("input");
@@ -113,8 +140,11 @@ export default class MultiselectCombobox extends LightningElement {
         if (this.selectedOptions.length > 1) {
             this.inputValue = this.selectedOptions.length + ' options selected';
         }
-        else{
+        else if(this.selectedOptions.length === 1){
             this.inputValue = this.selectedOptions[0].label;
+        }
+        else{
+            this.inputValue = 'No option selected';
         }
     }
 
@@ -141,7 +171,7 @@ export default class MultiselectCombobox extends LightningElement {
      
     removePill(event){
         let deletedValue = event.detail.name;
-        if(!(this.selectedOptions.length === 1)){
+        if(!(this.selectedOptions.length === 1) || this.zeroSelectionAllowed){
             this.unselectTheOption(deletedValue);
         }
      }
@@ -155,4 +185,3 @@ export default class MultiselectCombobox extends LightningElement {
      
  
 }
-// Code by NiHaL 

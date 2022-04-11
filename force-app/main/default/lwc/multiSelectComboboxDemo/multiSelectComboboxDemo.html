@@ -4,7 +4,11 @@
         <c-multiselect-combobox 
             options={cbOptions}
             onvaluechange={handleValueChange}
-            label="Names">
+            label="Names"
+            pills={pills}
+            pill-icon="standard:user"
+            zero-selection-allowed={zeroSelectionFlag}
+            disabled={disabled}>
         </c-multiselect-combobox>
 
     </lightning-card>

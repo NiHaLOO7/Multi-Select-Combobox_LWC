@@ -1,6 +1,3 @@
-<!-- 
-    Code by NiHaL 
--->
 <template>
         <div class="slds-form-element">
             <label class="slds-form-element__label">{label}</label>
@@ -45,18 +42,20 @@
             </div>
         </div>
     <!--Pills -->
-        <template for:each={selectedOptions} for:item="option">
+        <template if:true={pills}>
+            <template for:each={selectedOptions} for:item="option">
                 <lightning-pill 
                     key={option.value} 
                     class="slds-m-around_xx-small" 
                     name={option.value} 
+                    tabindex="0"
                     label={option.label} 
                     onremove={removePill}>
-                    <!-- Icon in the pill -->
-                        <lightning-icon icon-name="standard:user" alternative-text="Account"></lightning-icon>
+                <!-- Icon in the pill -->
+                    <template if:true={pillIcon}>
+                        <lightning-icon icon-name={pillIcon} alternative-text="icon"></lightning-icon>
+                    </template>
                 </lightning-pill>
-        </template>
+            </template>
+        </template>      
 </template>
-<!-- 
-    Code by NiHaL 
--->
