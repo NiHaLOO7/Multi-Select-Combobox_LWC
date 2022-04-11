@@ -1,5 +1,5 @@
 import { createElement } from "lwc";
-import MultiselectCombobox from "c/c/multiselectCombobox";
+import MultiselectCombobox from "c/multiselectCombobox";
 
 describe("c-multiselect-comboboxombobox test suite", () => {
   afterEach(() => {
