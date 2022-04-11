@@ -7,7 +7,7 @@ export default class MultiSelectComboboxDemo extends LightningElement {
                         {label:"four", value:"4"}]
     @track pills = true;
     @track disabled = false;
-    @track zeroSelectionFlag = false;
+    @track zeroSelectionFlag = true;
 
     handleValueChange(event){
         console.log(JSON.stringify(event.detail));

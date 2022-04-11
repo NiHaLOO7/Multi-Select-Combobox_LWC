@@ -10,7 +10,6 @@ export default class MultiselectCombobox extends LightningElement {
     
     // Flags
     @track hasRendered;
-    @track comboboxIsRendered;
     @track dropDownInFocus = false;
 
     // flags that are passed from parents.
@@ -67,7 +66,7 @@ export default class MultiselectCombobox extends LightningElement {
         if (!this.hasRendered) {
             //  we call this logic only once, when page is rendered for the first time
             this.handleDisabled();
-            this.setInitialValue();
+            this.setInitialValue(); 
         }
         this.hasRendered = true;
     }
@@ -75,6 +74,8 @@ export default class MultiselectCombobox extends LightningElement {
     setInitialValue(){
         this.inputValue = this.options[0].label;
         this.selectedOptions = [this.options[0]];
+        let firstOption = this.template.querySelectorAll('li.slds-listbox__item')[0];
+        firstOption.firstChild.classList.add("slds-is-selected");
         let values=[this.options[0].value];
         this.dispatchEvent(new CustomEvent("valuechange", {
             detail: values
@@ -93,12 +94,6 @@ export default class MultiselectCombobox extends LightningElement {
     handleClick() {
         let sldsCombobox = this.template.querySelector(".slds-combobox");
         sldsCombobox.classList.toggle("slds-is-open");
-        // Only happens on the first click
-        if (!this.comboboxIsRendered){
-            let firstOption = this.template.querySelectorAll('li.slds-listbox__item')[0];
-            firstOption.firstChild.classList.add("slds-is-selected");
-            this.comboboxIsRendered = true;
-        }
     }
 
     handleSelection(event) {
