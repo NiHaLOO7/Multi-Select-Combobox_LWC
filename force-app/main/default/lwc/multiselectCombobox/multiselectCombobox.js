@@ -70,7 +70,7 @@ export default class MultiselectCombobox extends LightningElement {
   }
 
   get initialSelectionFlag() {
-    return !this.initialSelections.length && this.zeroSelectionAllowed;
+    return this.initialSelections.length || (!this.initialSelections.length && this.zeroSelectionAllowed);
   }
 
   checkOptions(options) {
@@ -104,8 +104,9 @@ export default class MultiselectCombobox extends LightningElement {
   setInitialValue() {
     if (this.options && this.options.length) {
       if (
+        !this.disabled &&
         this.initialSelections &&
-        (this.initialSelections.length || this.initialSelectionFlag)
+        this.initialSelectionFlag
       ) {
         this.handleInitialSelections(this.initialSelections);
       } else {
