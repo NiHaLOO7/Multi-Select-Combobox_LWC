@@ -6,18 +6,17 @@
   @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
 -->
 <template>
-    <lightning-card title = "Multi Select ComboBox">
-
-        <c-multiselect-combobox 
-            options={cbOptions}
-            onvaluechange={handleValueChange}
-            label="Names"
-            pills={pills}
-            pill-icon="standard:user"
-            zero-selection-allowed={zeroSelectionFlag}
-            disabled={disabled}>
-        </c-multiselect-combobox>
-
-    </lightning-card>
-
+  <lightning-card title="Multi Select ComboBox">
+    <c-multiselect-combobox
+      options={cbOptions}
+      onvaluechange={handleValueChange}
+      label="Names"
+      pills={pills}
+      pill-icon="standard:user"
+      zero-selection-allowed={zeroSelectionFlag}
+      initial-selections={initialSelections}
+      disabled={disabled}
+    >
+    </c-multiselect-combobox>
+  </lightning-card>
 </template>

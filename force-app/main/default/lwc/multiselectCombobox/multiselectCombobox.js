@@ -6,6 +6,7 @@ export default class MultiselectCombobox extends LightningElement {
   @track selectedOptions = []; // list of all the selected options
   @track inputValue = ""; // label that is shown in the input of the combobox
   @track inputOptions; // List of all the options
+  @track initialSelection; // List of all the values selected initially
 
   // Flags
   @track hasRendered;
@@ -52,11 +53,24 @@ export default class MultiselectCombobox extends LightningElement {
   }
 
   @api
+  get initialSelections() {
+    return this.initialSelection;
+  }
+  set initialSelections(value) {
+    let initials = [];
+    this.initialSelection = this.checkOptions(initials.concat(value));
+  }
+
+  @api
   get pillIcon() {
     return this._pillIcon;
   }
   set pillIcon(value) {
     this._pillIcon = value;
+  }
+
+  get initialSelectionFlag() {
+    return !this.initialSelections.length && this.zeroSelectionAllowed;
   }
 
   checkOptions(options) {
@@ -89,19 +103,36 @@ export default class MultiselectCombobox extends LightningElement {
 
   setInitialValue() {
     if (this.options && this.options.length) {
-      this.inputValue = this.options[0].label;
-      this.selectedOptions = [this.options[0]];
-      let firstOption = this.template.querySelectorAll(
-        "li.slds-listbox__item"
-      )[0];
-      firstOption.firstChild.classList.add("slds-is-selected");
-      let values = [this.options[0].value];
-      this.dispatchEvent(
-        new CustomEvent("valuechange", {
-          detail: values
-        })
-      );
+      if (
+        this.initialSelections &&
+        (this.initialSelections.length || this.initialSelectionFlag)
+      ) {
+        this.handleInitialSelections(this.initialSelections);
+      } else {
+        this.inputValue = this.options[0].label;
+        this.selectedOptions = [this.options[0]];
+        let firstOption = this.template.querySelectorAll(
+          "li.slds-listbox__item"
+        )[0];
+        firstOption.firstChild.classList.add("slds-is-selected");
+      }
+      this.sendValues(this.selectedOptions);
     }
+  }
+
+  handleInitialSelections(initials) {
+    this.selectedOptions = [];
+    for (let initial of initials) {
+      try {
+        this.template
+          .querySelector(`[data-name="${initial.value}"]`)
+          .classList.add("slds-is-selected");
+        this.selectedOptions.push(initial);
+      } catch (err) {
+        continue;
+      }
+    }
+    this.setInputValue();
   }
 
   handleDisabled() {
@@ -135,9 +166,9 @@ export default class MultiselectCombobox extends LightningElement {
   }
 
   // Dispatch event to send value to the parent on every change event
-  sendValues() {
+  sendValues(selectedOptions) {
     let values = [];
-    for (const valueObject of this.selectedOptions) {
+    for (const valueObject of selectedOptions) {
       values.push(valueObject.value);
     }
     this.dispatchEvent(
@@ -159,7 +190,7 @@ export default class MultiselectCombobox extends LightningElement {
     }
     this.setInputValue();
     listBoxOption.classList.toggle("slds-is-selected");
-    this.sendValues();
+    this.sendValues(this.selectedOptions);
   }
 
   setInputValue() {
@@ -208,6 +239,6 @@ export default class MultiselectCombobox extends LightningElement {
     this.template
       .querySelector(`[data-name="${deletedValue}"]`)
       .classList.remove("slds-is-selected");
-    this.sendValues();
+    this.sendValues(this.selectedOptions);
   }
 }
