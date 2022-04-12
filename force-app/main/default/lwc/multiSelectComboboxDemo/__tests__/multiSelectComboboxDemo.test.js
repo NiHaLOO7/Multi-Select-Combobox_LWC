@@ -1,12 +1,12 @@
 import { createElement } from "lwc";
 import MultiSelectComboboxDemo from "c/multiSelectComboboxDemo";
 
-describe("c=multiselectCombobox test suite", () => {
+describe("c-multi-select-combobox-demo test suite", () => {
   function flushPromises() {
     return new Promise((resolve) => setImmediate(resolve));
   }
 
-  it("test initial value of pills, disable, zeroSelectionFlag", () => {
+  it("test initial value of pills, disable, zeroSelectionFlag and label", () => {
     const element = createElement("c-multi-select-combobox-demo", {
       is: MultiSelectComboboxDemo
     });

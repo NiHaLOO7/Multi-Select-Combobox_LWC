@@ -1,187 +1,244 @@
-import { LightningElement, api, track } from 'lwc';
+import { LightningElement, api, track } from "lwc";
 
 export default class MultiselectCombobox extends LightningElement {
+  @api label = "";
 
-    @api label = "";
+  @track selectedOptions = []; // list of all the selected options
+  @track inputValue = ""; // label that is shown in the input of the combobox
+  @track inputOptions; // List of all the options
+  @track initialSelection; // List of all the values selected initially
 
-    @track selectedOptions = [];                // list of all the selected options
-    @track inputValue;                          // label that is shown in the input of the combobox
-    @track inputOptions;                        // List of all the options
-    
-    // Flags
-    @track hasRendered;
-    @track comboboxIsRendered;
-    @track dropDownInFocus = false;
+  // Flags
+  @track hasRendered;
+  @track dropDownInFocus = false;
 
-    // flags that are passed from parents.
-    @track _disabled = false;                   // Flag to know if the combobox should be disabled or not 
-    @track _pills = false;                      // Flag to know if the pills should be visible or not
-    @track _isNoSelectionAllowed = false;       // Flag to know if zero selection should be allowed in the combobox or not
-    @track _pillIcon = false;                   // Pill's Icon
+  // flags that are passed from parents.
+  @track _disabled = false; // Flag to know if the combobox should be disabled or not
+  @track _pills = false; // Flag to know if the pills should be visible or not
+  @track _isNoSelectionAllowed = false; // Flag to know if zero selection should be allowed in the combobox or not
+  @track _pillIcon = false; // Pill's Icon
 
-    @api
-    get disabled(){
-        return this._disabled;
-    }
-    set disabled(value){
-        this._disabled = value;
-        this.handleDisabled();
-    }
+  @api
+  get disabled() {
+    return this._disabled;
+  }
+  set disabled(value) {
+    this._disabled = value;
+    this.handleDisabled();
+  }
 
-    @api
-    get pills(){
-        return this._pills;
-    }
-    set pills(value){
-        this._pills = value;
-    }
+  @api
+  get pills() {
+    return this._pills;
+  }
+  set pills(value) {
+    this._pills = value;
+  }
 
-    @api
-    get zeroSelectionAllowed(){
-        return this._isNoSelectionAllowed;
-    }
-    set zeroSelectionAllowed(value){
-        this._isNoSelectionAllowed = value;
-    }
-    
-    @api
-    get options() {
-        return this.inputOptions;
-    }
-    set options(value) {
-        let options = [];
-        this.inputOptions = options.concat(value);
-    }
+  @api
+  get zeroSelectionAllowed() {
+    return this._isNoSelectionAllowed;
+  }
+  set zeroSelectionAllowed(value) {
+    this._isNoSelectionAllowed = value;
+  }
 
-    @api
-    get pillIcon(){
-        return this._pillIcon;
-    }
-    set pillIcon(value){
-        this._pillIcon = value;
-    }
-    
-    
+  @api
+  get options() {
+    return this.inputOptions;
+  }
+  set options(value) {
+    let options = [];
+    this.inputOptions = this.checkOptions(options.concat(value));
+  }
 
-    renderedCallback() {
-        if (!this.hasRendered) {
-            //  we call this logic only once, when page is rendered for the first time
-            this.handleDisabled();
-            this.setInitialValue();
+  @api
+  get initialSelections() {
+    return this.initialSelection;
+  }
+  set initialSelections(value) {
+    let initials = [];
+    this.initialSelection = this.checkOptions(initials.concat(value));
+  }
+
+  @api
+  get pillIcon() {
+    return this._pillIcon;
+  }
+  set pillIcon(value) {
+    this._pillIcon = value;
+  }
+
+  get initialSelectionFlag() {
+    return !this.initialSelections.length && this.zeroSelectionAllowed;
+  }
+
+  checkOptions(options) {
+    if (typeof options === "object") {
+      try {
+        for (let opt of options) {
+          // eslint-disable-next-line no-prototype-builtins
+          if (opt.hasOwnProperty("label") && opt.hasOwnProperty("value")) {
+            continue;
+          } else {
+            return [];
+          }
         }
-        this.hasRendered = true;
+        return options;
+      } catch (err) {
+        return [];
+      }
     }
+    return [];
+  }
 
-    setInitialValue(){
+  renderedCallback() {
+    if (!this.hasRendered) {
+      //  we call this logic only once, when page is rendered for the first time
+      this.handleDisabled();
+      this.setInitialValue();
+    }
+    this.hasRendered = true;
+  }
+
+  setInitialValue() {
+    if (this.options && this.options.length) {
+      if (
+        this.initialSelections &&
+        (this.initialSelections.length || this.initialSelectionFlag)
+      ) {
+        this.handleInitialSelections(this.initialSelections);
+      } else {
         this.inputValue = this.options[0].label;
         this.selectedOptions = [this.options[0]];
-        let values=[this.options[0].value];
-        this.dispatchEvent(new CustomEvent("valuechange", {
-            detail: values
-        }));
+        let firstOption = this.template.querySelectorAll(
+          "li.slds-listbox__item"
+        )[0];
+        firstOption.firstChild.classList.add("slds-is-selected");
+      }
+      this.sendValues(this.selectedOptions);
     }
+  }
 
-    handleDisabled(){
-        let input = this.template.querySelector("input");
-        if (input){
-            input.disabled = this.disabled;
-            this._pills = this.pills && this.disabled ? !this.disabled : this._pills;  //Remove pills when disabled
-        }
+  handleInitialSelections(initials) {
+    this.selectedOptions = [];
+    for (let initial of initials) {
+      try {
+        this.template
+          .querySelector(`[data-name="${initial.value}"]`)
+          .classList.add("slds-is-selected");
+        this.selectedOptions.push(initial);
+      } catch (err) {
+        continue;
+      }
     }
+    this.setInputValue();
+  }
 
-    
-    handleClick() {
-        let sldsCombobox = this.template.querySelector(".slds-combobox");
-        sldsCombobox.classList.toggle("slds-is-open");
-        // Only happens on the first click
-        if (!this.comboboxIsRendered){
-            let firstOption = this.template.querySelectorAll('li.slds-listbox__item')[0];
-            firstOption.firstChild.classList.add("slds-is-selected");
-            this.comboboxIsRendered = true;
-        }
+  handleDisabled() {
+    let input = this.template.querySelector("input");
+    if (input) {
+      input.disabled = this.disabled;
+      this._pills = this.pills && this.disabled ? !this.disabled : this._pills; //Remove pills when disabled
     }
+  }
 
-    handleSelection(event) {
-        let value = event.currentTarget.dataset.value;
-        let selectedListBoxOptions = this.template.querySelectorAll('.slds-is-selected');
-        if(!(selectedListBoxOptions.length === 1 && selectedListBoxOptions[0].dataset.name === value) || this.zeroSelectionAllowed){
-            this.handleOption(event, value);
-        }
-        let input = this.template.querySelector("input");
-        input.focus();
-    }
+  handleClick() {
+    let sldsCombobox = this.template.querySelector(".slds-combobox");
+    sldsCombobox.classList.toggle("slds-is-open");
+  }
 
-    // Dispatch event to send value to the parent on every change event
-    sendValues(){
-        let values = [];
-        for (const valueObject of this.selectedOptions) {
-            values.push(valueObject.value);
-        }
-        this.dispatchEvent(new CustomEvent("valuechange", {
-            detail: values
-        }));
+  handleSelection(event) {
+    let value = event.currentTarget.dataset.value;
+    let selectedListBoxOptions =
+      this.template.querySelectorAll(".slds-is-selected");
+    if (
+      !(
+        selectedListBoxOptions.length === 1 &&
+        selectedListBoxOptions[0].dataset.name === value
+      ) ||
+      this.zeroSelectionAllowed
+    ) {
+      this.handleOption(event, value);
     }
+    let input = this.template.querySelector("input");
+    input.focus();
+  }
 
-    handleOption(event, value){
-        let listBoxOption = event.currentTarget.firstChild;
-        if (listBoxOption.classList.contains("slds-is-selected")) {
-            this.selectedOptions = this.selectedOptions.filter(option => option.value !== value);
-        }
-        else {
-            let option = this.options.find(option => option.value === value);
-            this.selectedOptions.push(option);
-        }
-        this.setInputValue();    
-        listBoxOption.classList.toggle("slds-is-selected");
-        this.sendValues();
+  // Dispatch event to send value to the parent on every change event
+  sendValues(selectedOptions) {
+    let values = [];
+    for (const valueObject of selectedOptions) {
+      values.push(valueObject.value);
     }
+    this.dispatchEvent(
+      new CustomEvent("valuechange", {
+        detail: values
+      })
+    );
+  }
 
-    setInputValue(){
-        if (this.selectedOptions.length > 1) {
-            this.inputValue = this.selectedOptions.length + ' options selected';
-        }
-        else if(this.selectedOptions.length === 1){
-            this.inputValue = this.selectedOptions[0].label;
-        }
-        else{
-            this.inputValue = 'No option selected';
-        }
+  handleOption(event, value) {
+    let listBoxOption = event.currentTarget.firstChild;
+    if (listBoxOption.classList.contains("slds-is-selected")) {
+      this.selectedOptions = this.selectedOptions.filter(
+        (option) => option.value !== value
+      );
+    } else {
+      let option = this.options.find((opt) => opt.value === value);
+      this.selectedOptions.push(option);
     }
+    this.setInputValue();
+    listBoxOption.classList.toggle("slds-is-selected");
+    this.sendValues(this.selectedOptions);
+  }
 
-    handleBlur() {
-        if (!this.dropDownInFocus) {
-            this.closeDropbox();
-        }
+  setInputValue() {
+    if (this.selectedOptions.length > 1) {
+      this.inputValue = this.selectedOptions.length + " options selected";
+    } else if (this.selectedOptions.length === 1) {
+      this.inputValue = this.selectedOptions[0].label;
+    } else {
+      this.inputValue = "No option selected";
     }
+  }
 
-    handleMouseleave() {
-        this.dropDownInFocus = false;
+  handleBlur() {
+    if (!this.dropDownInFocus) {
+      this.closeDropbox();
     }
+  }
 
-    handleMouseEnter() {
-        this.dropDownInFocus = true;
-    }
-    
-    closeDropbox() {
-        let sldsCombobox = this.template.querySelector(".slds-combobox");
-        sldsCombobox.classList.remove("slds-is-open");
-    }
+  handleMouseleave() {
+    this.dropDownInFocus = false;
+  }
 
-    // Pill Actions  ==> If you want to remove the pills, remove these methods 
-     
-    removePill(event){
-        let deletedValue = event.detail.name;
-        if(!(this.selectedOptions.length === 1) || this.zeroSelectionAllowed){
-            this.unselectTheOption(deletedValue);
-        }
-     }
- 
-     unselectTheOption(deletedValue){
-         this.selectedOptions = this.selectedOptions.filter(option => option.value !== deletedValue);
-         this.setInputValue();
-         this.template.querySelector(`[data-name="${deletedValue}"]`).classList.remove("slds-is-selected");
-         this.sendValues();
-     }
-     
- 
+  handleMouseEnter() {
+    this.dropDownInFocus = true;
+  }
+
+  closeDropbox() {
+    let sldsCombobox = this.template.querySelector(".slds-combobox");
+    sldsCombobox.classList.remove("slds-is-open");
+  }
+
+  // Pill Actions  ==> If you want to remove the pills, remove these methods
+
+  removePill(event) {
+    let deletedValue = event.detail.name;
+    if (!(this.selectedOptions.length === 1) || this.zeroSelectionAllowed) {
+      this.unselectTheOption(deletedValue);
+    }
+  }
+
+  unselectTheOption(deletedValue) {
+    this.selectedOptions = this.selectedOptions.filter(
+      (option) => option.value !== deletedValue
+    );
+    this.setInputValue();
+    this.template
+      .querySelector(`[data-name="${deletedValue}"]`)
+      .classList.remove("slds-is-selected");
+    this.sendValues(this.selectedOptions);
+  }
 }
