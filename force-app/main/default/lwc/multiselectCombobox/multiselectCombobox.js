@@ -48,7 +48,7 @@ export default class MultiselectCombobox extends LightningElement {
   }
   set options(value) {
     let options = [];
-    this.inputOptions = options.concat(value);
+    this.inputOptions = this.checkOptions(options.concat(value));
   }
 
   @api
@@ -57,6 +57,25 @@ export default class MultiselectCombobox extends LightningElement {
   }
   set pillIcon(value) {
     this._pillIcon = value;
+  }
+
+  checkOptions(options) {
+    if (typeof options === "object") {
+      try {
+        for (let opt of options) {
+          // eslint-disable-next-line no-prototype-builtins
+          if (opt.hasOwnProperty("label") && opt.hasOwnProperty("value")) {
+            continue;
+          } else {
+            return [];
+          }
+        }
+        return options;
+      } catch (err) {
+        return [];
+      }
+    }
+    return [];
   }
 
   renderedCallback() {
