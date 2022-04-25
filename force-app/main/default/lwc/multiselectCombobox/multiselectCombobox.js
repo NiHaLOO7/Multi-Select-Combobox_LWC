@@ -9,7 +9,8 @@ export default class MultiselectCombobox extends LightningElement {
   @track initialSelection; // List of all the values selected initially
 
   // Flags
-  @track hasRendered;
+  @track isComponentRendered;
+  @track optionsChanged = true;
   @track dropDownInFocus = false;
 
   // flags that are passed from parents.
@@ -29,7 +30,7 @@ export default class MultiselectCombobox extends LightningElement {
 
   @api
   get pills() {
-    return this._pills;
+    return !this.disabled && this._pills;
   }
   set pills(value) {
     this._pills = value;
@@ -50,6 +51,7 @@ export default class MultiselectCombobox extends LightningElement {
   set options(value) {
     let options = [];
     this.inputOptions = this.checkOptions(options.concat(value));
+    this.optionsChanged = true;
   }
 
   @api
@@ -59,6 +61,7 @@ export default class MultiselectCombobox extends LightningElement {
   set initialSelections(value) {
     let initials = [];
     this.initialSelection = this.checkOptions(initials.concat(value));
+    this.optionsChanged = true;
   }
 
   @api
@@ -70,7 +73,10 @@ export default class MultiselectCombobox extends LightningElement {
   }
 
   get initialSelectionFlag() {
-    return this.initialSelections.length || (!this.initialSelections.length && this.zeroSelectionAllowed);
+    return (
+      this.initialSelections.length ||
+      (!this.initialSelections.length && this.zeroSelectionAllowed)
+    );
   }
 
   checkOptions(options) {
@@ -93,12 +99,14 @@ export default class MultiselectCombobox extends LightningElement {
   }
 
   renderedCallback() {
-    if (!this.hasRendered) {
-      //  we call this logic only once, when page is rendered for the first time
+    if (!this.isComponentRendered) {
       this.handleDisabled();
-      this.setInitialValue();
+      this.hasRendered = true;
     }
-    this.hasRendered = true;
+    if (this.optionsChanged) {
+      this.setInitialValue();
+      this.optionsChanged = false;
+    }
   }
 
   setInitialValue() {
@@ -117,8 +125,10 @@ export default class MultiselectCombobox extends LightningElement {
         )[0];
         firstOption.firstChild.classList.add("slds-is-selected");
       }
-      this.sendValues(this.selectedOptions);
+    } else {
+      this.inputValue = "Select an Option";
     }
+    this.sendValues(this.selectedOptions);
   }
 
   handleInitialSelections(initials) {
@@ -140,7 +150,6 @@ export default class MultiselectCombobox extends LightningElement {
     let input = this.template.querySelector("input");
     if (input) {
       input.disabled = this.disabled;
-      this._pills = this.pills && this.disabled ? !this.disabled : this._pills; //Remove pills when disabled
     }
   }
 
@@ -200,7 +209,7 @@ export default class MultiselectCombobox extends LightningElement {
     } else if (this.selectedOptions.length === 1) {
       this.inputValue = this.selectedOptions[0].label;
     } else {
-      this.inputValue = "No option selected";
+      this.inputValue = "Select an Option";
     }
   }
 
