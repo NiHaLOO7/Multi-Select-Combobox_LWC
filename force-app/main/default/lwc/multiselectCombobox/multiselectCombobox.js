@@ -18,6 +18,7 @@ export default class MultiselectCombobox extends LightningElement {
   @track _pills = false; // Flag to know if the pills should be visible or not
   @track _isNoSelectionAllowed = false; // Flag to know if zero selection should be allowed in the combobox or not
   @track _pillIcon = false; // Pill's Icon
+  @track _value;
 
   @api
   get disabled() {
@@ -65,6 +66,22 @@ export default class MultiselectCombobox extends LightningElement {
   }
 
   @api
+  get value() {
+    return this.selectedOptions;
+  }
+  set value(newValue) {
+    let formattedValueList = this.formatSelectedOptions(newValue);
+    if (
+      JSON.stringify(formattedValueList) !==
+        JSON.stringify(this.selectedOptions) &&
+      this.checkZeroSelectionCondition(formattedValueList)
+    ) {
+      this.handleInitialSelections(formattedValueList);
+      this.sendValues(this.selectedOptions);
+    }
+  }
+
+  @api
   get pillIcon() {
     return this._pillIcon;
   }
@@ -72,11 +89,18 @@ export default class MultiselectCombobox extends LightningElement {
     this._pillIcon = value;
   }
 
-  get initialSelectionFlag() {
-    return (
-      this.initialSelections &&
-      (this.zeroSelectionAllowed || this.initialSelections.length)
-    );
+  checkZeroSelectionCondition(value) {
+    return value && (this.zeroSelectionAllowed || value.length);
+  }
+
+  formatSelectedOptions(values) {
+    let val = [];
+    this.options.forEach((opt) => {
+      if (values.includes(opt.value)) {
+        val.push(opt);
+      }
+    });
+    return val;
   }
 
   checkOptions(options) {
@@ -111,7 +135,10 @@ export default class MultiselectCombobox extends LightningElement {
 
   setInitialValue() {
     if (this.options && this.options.length) {
-      if (!this.disabled && this.initialSelectionFlag) {
+      if (
+        !this.disabled &&
+        this.checkZeroSelectionCondition(this.initialSelections)
+      ) {
         this.handleInitialSelections(this.initialSelections);
       } else {
         this.inputValue = this.options[0].label;
@@ -127,8 +154,15 @@ export default class MultiselectCombobox extends LightningElement {
     }
   }
 
+  removeAllInitialSelections() {
+    this.template.querySelectorAll(".slds-is-selected").forEach((selecteds) => {
+      selecteds.classList.remove("slds-is-selected");
+    });
+  }
+
   handleInitialSelections(initials) {
     this.selectedOptions = [];
+    this.removeAllInitialSelections();
     for (let initial of initials) {
       try {
         this.template

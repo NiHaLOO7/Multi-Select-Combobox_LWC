@@ -9,6 +9,7 @@
   <lightning-card title="Multi Select ComboBox">
     <c-multiselect-combobox
       options={cbOptions}
+      value={selectedOptions}
       onvaluechange={handleValueChange}
       label="Names"
       pills={pills}
@@ -18,5 +19,12 @@
       disabled={disabled}
     >
     </c-multiselect-combobox>
+
+    <br />
+    <lightning-button
+      variant="brand"
+      label="button"
+      onclick={clickHandler}
+    ></lightning-button>
   </lightning-card>
 </template>
