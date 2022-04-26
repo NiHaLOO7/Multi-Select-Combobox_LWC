@@ -5,11 +5,12 @@ export default class MultiselectCombobox extends LightningElement {
 
   @track selectedOptions = []; // list of all the selected options
   @track inputValue = ""; // label that is shown in the input of the combobox
-  @track inputOptions; // List of all the options
+  @track inputOptions = []; // List of all the options
   @track initialSelection; // List of all the values selected initially
 
   // Flags
-  @track hasRendered;
+  @track isComponentRendered;
+  @track optionsChanged = true;
   @track dropDownInFocus = false;
 
   // flags that are passed from parents.
@@ -17,6 +18,7 @@ export default class MultiselectCombobox extends LightningElement {
   @track _pills = false; // Flag to know if the pills should be visible or not
   @track _isNoSelectionAllowed = false; // Flag to know if zero selection should be allowed in the combobox or not
   @track _pillIcon = false; // Pill's Icon
+  @track _value;
 
   @api
   get disabled() {
@@ -29,7 +31,7 @@ export default class MultiselectCombobox extends LightningElement {
 
   @api
   get pills() {
-    return this._pills;
+    return !this.disabled && this._pills;
   }
   set pills(value) {
     this._pills = value;
@@ -50,6 +52,7 @@ export default class MultiselectCombobox extends LightningElement {
   set options(value) {
     let options = [];
     this.inputOptions = this.checkOptions(options.concat(value));
+    this.optionsChanged = true;
   }
 
   @api
@@ -59,6 +62,23 @@ export default class MultiselectCombobox extends LightningElement {
   set initialSelections(value) {
     let initials = [];
     this.initialSelection = this.checkOptions(initials.concat(value));
+    this.optionsChanged = true;
+  }
+
+  @api
+  get value() {
+    return this.selectedOptions;
+  }
+  set value(newValue) {
+    let formattedValueList = this.formatSelectedOptions(newValue);
+    if (
+      JSON.stringify(formattedValueList) !==
+        JSON.stringify(this.selectedOptions) &&
+      this.checkZeroSelectionCondition(formattedValueList)
+    ) {
+      this.handleInitialSelections(formattedValueList);
+      this.sendValues(this.selectedOptions);
+    }
   }
 
   @api
@@ -69,8 +89,18 @@ export default class MultiselectCombobox extends LightningElement {
     this._pillIcon = value;
   }
 
-  get initialSelectionFlag() {
-    return this.initialSelections.length || (!this.initialSelections.length && this.zeroSelectionAllowed);
+  checkZeroSelectionCondition(value) {
+    return value && (this.zeroSelectionAllowed || value.length);
+  }
+
+  formatSelectedOptions(values) {
+    let val = [];
+    this.options.forEach((opt) => {
+      if (values.includes(opt.value)) {
+        val.push(opt);
+      }
+    });
+    return val;
   }
 
   checkOptions(options) {
@@ -93,20 +123,21 @@ export default class MultiselectCombobox extends LightningElement {
   }
 
   renderedCallback() {
-    if (!this.hasRendered) {
-      //  we call this logic only once, when page is rendered for the first time
+    if (!this.isComponentRendered) {
       this.handleDisabled();
-      this.setInitialValue();
+      this.hasRendered = true;
     }
-    this.hasRendered = true;
+    if (this.optionsChanged) {
+      this.setInitialValue();
+      this.optionsChanged = false;
+    }
   }
 
   setInitialValue() {
     if (this.options && this.options.length) {
       if (
         !this.disabled &&
-        this.initialSelections &&
-        this.initialSelectionFlag
+        this.checkZeroSelectionCondition(this.initialSelections)
       ) {
         this.handleInitialSelections(this.initialSelections);
       } else {
@@ -118,11 +149,20 @@ export default class MultiselectCombobox extends LightningElement {
         firstOption.firstChild.classList.add("slds-is-selected");
       }
       this.sendValues(this.selectedOptions);
+    } else {
+      this.inputValue = "Select an Option";
     }
+  }
+
+  removeAllInitialSelections() {
+    this.template.querySelectorAll(".slds-is-selected").forEach((selecteds) => {
+      selecteds.classList.remove("slds-is-selected");
+    });
   }
 
   handleInitialSelections(initials) {
     this.selectedOptions = [];
+    this.removeAllInitialSelections();
     for (let initial of initials) {
       try {
         this.template
@@ -140,7 +180,6 @@ export default class MultiselectCombobox extends LightningElement {
     let input = this.template.querySelector("input");
     if (input) {
       input.disabled = this.disabled;
-      this._pills = this.pills && this.disabled ? !this.disabled : this._pills; //Remove pills when disabled
     }
   }
 
@@ -200,7 +239,7 @@ export default class MultiselectCombobox extends LightningElement {
     } else if (this.selectedOptions.length === 1) {
       this.inputValue = this.selectedOptions[0].label;
     } else {
-      this.inputValue = "No option selected";
+      this.inputValue = "Select an Option";
     }
   }
 

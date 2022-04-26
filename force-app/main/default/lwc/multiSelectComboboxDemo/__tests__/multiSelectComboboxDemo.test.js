@@ -23,7 +23,7 @@ describe("c-multi-select-combobox-demo test suite", () => {
       );
       expect(cmboBox.disabled).toBe(false);
       expect(cmboBox.pills).toBe(true);
-      expect(cmboBox.zeroSelectionAllowed).toBe(false);
+      expect(cmboBox.zeroSelectionAllowed).toBe(true);
       expect(cmboBox.options).toEqual(options);
     });
   });
