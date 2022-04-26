@@ -74,8 +74,8 @@ export default class MultiselectCombobox extends LightningElement {
 
   get initialSelectionFlag() {
     return (
-      this.initialSelections.length ||
-      (!this.initialSelections.length && this.zeroSelectionAllowed)
+      this.initialSelections &&
+      (this.zeroSelectionAllowed || this.initialSelections.length)
     );
   }
 
@@ -111,11 +111,7 @@ export default class MultiselectCombobox extends LightningElement {
 
   setInitialValue() {
     if (this.options && this.options.length) {
-      if (
-        !this.disabled &&
-        this.initialSelections &&
-        this.initialSelectionFlag
-      ) {
+      if (!this.disabled && this.initialSelectionFlag) {
         this.handleInitialSelections(this.initialSelections);
       } else {
         this.inputValue = this.options[0].label;
@@ -125,10 +121,10 @@ export default class MultiselectCombobox extends LightningElement {
         )[0];
         firstOption.firstChild.classList.add("slds-is-selected");
       }
+      this.sendValues(this.selectedOptions);
     } else {
       this.inputValue = "Select an Option";
     }
-    this.sendValues(this.selectedOptions);
   }
 
   handleInitialSelections(initials) {
