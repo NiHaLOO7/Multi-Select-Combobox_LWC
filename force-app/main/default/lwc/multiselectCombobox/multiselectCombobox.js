@@ -114,9 +114,9 @@ export default class MultiselectCombobox extends LightningElement {
           option.classList.remove("slds-is-selected");
         }
       }
-      this.setInputValue();
       this.sendValues(this.selectedOptions);
     }
+    this.setInputValue();
   }
 
   // Renders whenever the option is changed or the value is changed
