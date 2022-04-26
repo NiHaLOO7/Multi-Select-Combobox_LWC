@@ -7,6 +7,7 @@ export default class MultiselectCombobox extends LightningElement {
   @track inputValue = ""; // label that is shown in the input of the combobox
   @track inputOptions = []; // List of all the options
   @track initialSelection; // List of all the values selected initially
+  @track currentValues = [];
 
   // Flags
   @track isComponentRendered;
@@ -70,14 +71,11 @@ export default class MultiselectCombobox extends LightningElement {
     return this.selectedOptions;
   }
   set value(newValue) {
-    let formattedValueList = this.formatSelectedOptions(newValue);
     if (
-      JSON.stringify(formattedValueList) !==
-        JSON.stringify(this.selectedOptions) &&
-      this.checkZeroSelectionCondition(formattedValueList)
+      JSON.stringify(this.currentValues) !== JSON.stringify(newValue) &&
+      this.checkZeroSelectionCondition(newValue)
     ) {
-      this.handleInitialSelections(formattedValueList);
-      this.sendValues(this.selectedOptions);
+      this.updateSelectedOptions(newValue);
     }
   }
 
@@ -93,14 +91,19 @@ export default class MultiselectCombobox extends LightningElement {
     return value && (this.zeroSelectionAllowed || value.length);
   }
 
-  formatSelectedOptions(values) {
-    let val = [];
-    this.options.forEach((opt) => {
-      if (values.includes(opt.value)) {
-        val.push(opt);
+  updateSelectedOptions(newValue) {
+    this.selectedOptions = [];
+    for (let opt of this.options) {
+      let option = this.template.querySelector(`[data-name="${opt.value}"]`);
+      if (newValue.includes(opt.value)) {
+        option.classList.add("slds-is-selected");
+        this.selectedOptions.push(opt);
+      } else if (option.classList.contains("slds-is-selected")) {
+        option.classList.remove("slds-is-selected");
       }
-    });
-    return val;
+    }
+    this.setInputValue();
+    this.sendValues(this.selectedOptions);
   }
 
   checkOptions(options) {
@@ -211,6 +214,7 @@ export default class MultiselectCombobox extends LightningElement {
     for (const valueObject of selectedOptions) {
       values.push(valueObject.value);
     }
+    this.currentValues = values;
     this.dispatchEvent(
       new CustomEvent("valuechange", {
         detail: values
