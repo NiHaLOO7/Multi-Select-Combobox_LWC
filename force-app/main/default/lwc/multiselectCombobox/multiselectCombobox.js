@@ -5,7 +5,7 @@ export default class MultiselectCombobox extends LightningElement {
 
   @track selectedOptions = []; // list of all the selected options
   @track inputValue = ""; // label that is shown in the input of the combobox
-  @track inputOptions; // List of all the options
+  @track inputOptions = []; // List of all the options
   @track initialSelection; // List of all the values selected initially
 
   // Flags
