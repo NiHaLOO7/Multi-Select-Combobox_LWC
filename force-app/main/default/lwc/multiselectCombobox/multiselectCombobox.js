@@ -82,22 +82,13 @@ export default class MultiselectCombobox extends LightningElement {
 
   // This method is to check the format of the options
   checkOptions(options) {
-    if (typeof options === "object") {
-      try {
-        for (let opt of options) {
-          // eslint-disable-next-line no-prototype-builtins
-          if (opt.hasOwnProperty("label") && opt.hasOwnProperty("value")) {
-            continue;
-          } else {
-            return [];
-          }
-        }
-        return options;
-      } catch (err) {
+    for (let opt of options) {
+      // eslint-disable-next-line no-prototype-builtins
+      if (!(opt.hasOwnProperty("label") && opt.hasOwnProperty("value"))) {
         return [];
       }
     }
-    return [];
+    return options;
   }
 
   // This method updates the option selection depending on the values
@@ -115,6 +106,8 @@ export default class MultiselectCombobox extends LightningElement {
         }
       }
       this.sendValues(this.selectedOptions);
+    } else {
+      this.selectedOptions = [];
     }
     this.setInputValue();
   }

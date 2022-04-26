@@ -77,7 +77,92 @@ describe("c-multiselect-comboboxombobox test suite", () => {
             expect(
               element.shadowRoot.querySelector("[data-name='3']").classList
             ).toContain("slds-is-selected");
+            element.value = ["1", "4"];
+            return flushPromises().then(() => {
+              input = element.shadowRoot.querySelector("input");
+              selectedOpt =
+                element.shadowRoot.querySelectorAll(".slds-is-selected");
+              expect(input.value).toBe("2 options selected");
+              expect(selectedOpt.length).toBe(2);
+              expect(
+                element.shadowRoot.querySelector("[data-name='1']").classList
+              ).toContain("slds-is-selected");
+              expect(
+                element.shadowRoot.querySelector("[data-name='4']").classList
+              ).toContain("slds-is-selected");
+            });
           });
+      });
+    });
+  });
+
+  it("test with different inputs of options", () => {
+    const element = createElement("c-multiselect-combobox", {
+      is: MultiselectCombobox
+    });
+    document.body.appendChild(element);
+    return flushPromises().then(() => {
+      let opt = element.shadowRoot.querySelectorAll("li.slds-listbox__item");
+      let input = element.shadowRoot.querySelector("input");
+      const pill = element.shadowRoot.querySelector("lightning-pill");
+      expect(opt.length).toBe(0);
+      expect(input.disabled).toBe(false);
+      expect(input.value).toBe("Select an Option");
+      expect(pill).toBeNull();
+      element.pills = true;
+      element.options = "Options";
+      return flushPromises().then(() => {
+        let pills = element.shadowRoot.querySelectorAll("lightning-pill");
+        opt = element.shadowRoot.querySelectorAll("li.slds-listbox__item");
+        let combobox = element.shadowRoot.querySelector(".slds-combobox");
+        let selectedOpt =
+          element.shadowRoot.querySelectorAll(".slds-is-selected");
+        expect(pills.length).toBe(0);
+        expect(input.value).toBe("Select an Option");
+        expect(opt.length).toBe(0);
+        expect(combobox.classList).not.toContain("slds-is-open");
+        expect(selectedOpt.length).toBe(0);
+        element.options = [
+          { label: "one", value: "1" },
+          { label: "two", valu: "2" },
+          { label: "three", value: "3" },
+          { label: "four", value: "4" }
+        ];
+        return flushPromises().then(() => {
+          pills = element.shadowRoot.querySelectorAll("lightning-pill");
+          opt = element.shadowRoot.querySelectorAll("li.slds-listbox__item");
+          selectedOpt =
+            element.shadowRoot.querySelectorAll(".slds-is-selected");
+          expect(pills.length).toBe(0);
+          expect(input.value).toBe("Select an Option");
+          expect(opt.length).toBe(0);
+          expect(selectedOpt.length).toBe(0);
+          element.options = { label: "one", value: "1" };
+          return flushPromises().then(() => {
+            pills = element.shadowRoot.querySelectorAll("lightning-pill");
+            opt = element.shadowRoot.querySelectorAll("li.slds-listbox__item");
+            selectedOpt =
+              element.shadowRoot.querySelectorAll(".slds-is-selected");
+            expect(pills.length).toBe(1);
+            expect(input.value).toBe("one");
+            expect(opt.length).toBe(1);
+            expect(element.value).toEqual(["1"]);
+            expect(selectedOpt.length).toBe(1);
+            element.options = [];
+            return flushPromises().then(() => {
+              pills = element.shadowRoot.querySelectorAll("lightning-pill");
+              opt = element.shadowRoot.querySelectorAll(
+                "li.slds-listbox__item"
+              );
+              selectedOpt =
+                element.shadowRoot.querySelectorAll(".slds-is-selected");
+              expect(pills.length).toBe(0);
+              expect(input.value).toBe("Select an Option");
+              expect(opt.length).toBe(0);
+              expect(selectedOpt.length).toBe(0);
+            });
+          });
+        });
       });
     });
   });
