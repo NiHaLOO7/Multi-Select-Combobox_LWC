@@ -10,6 +10,7 @@
           role="combobox"
         >
           <div
+            data-id={optionsChanged}
             class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right"
             role="none"
           >
@@ -22,6 +23,7 @@
               onclick={handleClick}
               role="textbox"
               value={inputValue}
+              disabled={disabled}
               readonly
               type="text"
               onblur={handleBlur}

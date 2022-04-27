@@ -17,14 +17,23 @@ describe("c-multi-select-combobox-demo test suite", () => {
       { label: "three", value: "3" },
       { label: "four", value: "4" }
     ];
-    return flushPromises().then(() => {
-      const cmboBox = element.shadowRoot.querySelector(
-        "c-multiselect-combobox"
-      );
-      expect(cmboBox.disabled).toBe(false);
-      expect(cmboBox.pills).toBe(true);
-      expect(cmboBox.zeroSelectionAllowed).toBe(true);
-      expect(cmboBox.options).toEqual(options);
-    });
+    return flushPromises()
+      .then(() => {
+        const cmboBox = element.shadowRoot.querySelector(
+          "c-multiselect-combobox"
+        );
+        expect(cmboBox.disabled).toBe(false);
+        expect(cmboBox.pills).toBe(true);
+        expect(cmboBox.zeroSelectionAllowed).toBe(true);
+        expect(cmboBox.options).toEqual(options);
+        const btn = element.shadowRoot.querySelector("lightning-button");
+        btn.click();
+      })
+      .then(() => {
+        const cmboBox = element.shadowRoot.querySelector(
+          "c-multiselect-combobox"
+        );
+        expect(cmboBox.value).toEqual(["1", "4"]);
+      });
   });
 });
