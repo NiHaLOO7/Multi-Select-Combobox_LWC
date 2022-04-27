@@ -9,7 +9,7 @@ module.exports = {
   testRunner: "jest",
   mutator: "javascript",
   coverageAnalysis: "off",
-  timeoutMS: 60000,
+  timeoutMS: 120000,
   tempDirName: "stryker-tmp",
   files: [
     "*",
