@@ -358,7 +358,16 @@ describe("c-multiselect-comboboxombobox test suite", () => {
         { label: "five", value: "5" }
       ];
       element.zeroSelectionAllowed = true;
+      const valuechangeEvent = jest.fn();
+      element.addEventListener("valuechange", valuechangeEvent);
       return flushPromises().then(() => {
+        expect(valuechangeEvent).toHaveBeenCalled();
+        expect(valuechangeEvent.mock.calls[0][0].detail).toEqual([
+          "1",
+          "2",
+          "3",
+          "4"
+        ]);
         combobox = element.shadowRoot.querySelector(".slds-combobox");
         input = element.shadowRoot.querySelector("input");
         let dropdown = element.shadowRoot.querySelector("div.slds-dropdown");
