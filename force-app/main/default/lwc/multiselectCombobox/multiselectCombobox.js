@@ -4,32 +4,32 @@ export default class MultiselectCombobox extends LightningElement {
   @api label = "";
 
   @track selectedOptions = []; // list of all the selected options
-  @track inputValue = ""; // label that is shown in the input of the combobox
-  @track inputOptions; // List of all the options
-  @track initialSelection; // List of all the values selected initially
+  @track inputValue = ""; // place holder for the input of the combobox
+  @track inputOptions = []; // List of all the options
+  @track selectedValues = []; // List of all the selected values
 
   // Flags
-  @track hasRendered;
+  @track optionsChanged = true;
   @track dropDownInFocus = false;
 
-  // flags that are passed from parents.
+  // Encapsulated propereties whose values are passed from the parent component
   @track _disabled = false; // Flag to know if the combobox should be disabled or not
   @track _pills = false; // Flag to know if the pills should be visible or not
   @track _isNoSelectionAllowed = false; // Flag to know if zero selection should be allowed in the combobox or not
   @track _pillIcon = false; // Pill's Icon
 
+  // Getters and setters for the encapsulated properties
   @api
   get disabled() {
     return this._disabled;
   }
   set disabled(value) {
     this._disabled = value;
-    this.handleDisabled();
   }
 
   @api
   get pills() {
-    return this._pills;
+    return !this.disabled && this._pills;
   }
   set pills(value) {
     this._pills = value;
@@ -50,15 +50,21 @@ export default class MultiselectCombobox extends LightningElement {
   set options(value) {
     let options = [];
     this.inputOptions = this.checkOptions(options.concat(value));
+    this.optionsChanged = true;
   }
 
   @api
-  get initialSelections() {
-    return this.initialSelection;
+  get value() {
+    return this.selectedValues;
   }
-  set initialSelections(value) {
-    let initials = [];
-    this.initialSelection = this.checkOptions(initials.concat(value));
+  set value(newValues) {
+    if (
+      JSON.stringify(this.selectedValues) !== JSON.stringify(newValues) &&
+      this.checkZeroSelectionCondition(newValues)
+    ) {
+      this.selectedValues = newValues;
+      this.optionsChanged = true;
+    }
   }
 
   @api
@@ -69,77 +75,48 @@ export default class MultiselectCombobox extends LightningElement {
     this._pillIcon = value;
   }
 
-  get initialSelectionFlag() {
-    return !this.initialSelections.length && this.zeroSelectionAllowed;
+  // Checks for the condition when we get an empty list as value but the zero selection is off
+  checkZeroSelectionCondition(value) {
+    return value && (this.zeroSelectionAllowed || value.length);
   }
 
+  // This method is to check the format of the options
   checkOptions(options) {
-    if (typeof options === "object") {
-      try {
-        for (let opt of options) {
-          // eslint-disable-next-line no-prototype-builtins
-          if (opt.hasOwnProperty("label") && opt.hasOwnProperty("value")) {
-            continue;
-          } else {
-            return [];
-          }
-        }
-        return options;
-      } catch (err) {
+    for (let opt of options) {
+      // eslint-disable-next-line no-prototype-builtins
+      if (!(opt.hasOwnProperty("label") && opt.hasOwnProperty("value"))) {
         return [];
       }
     }
-    return [];
+    return options;
   }
 
-  renderedCallback() {
-    if (!this.hasRendered) {
-      //  we call this logic only once, when page is rendered for the first time
-      this.handleDisabled();
-      this.setInitialValue();
-    }
-    this.hasRendered = true;
-  }
-
-  setInitialValue() {
+  // This method updates the option selection depending on the values
+  updateSelectedOptions(newValue) {
     if (this.options && this.options.length) {
-      if (
-        this.initialSelections &&
-        (this.initialSelections.length || this.initialSelectionFlag)
-      ) {
-        this.handleInitialSelections(this.initialSelections);
-      } else {
-        this.inputValue = this.options[0].label;
-        this.selectedOptions = [this.options[0]];
-        let firstOption = this.template.querySelectorAll(
-          "li.slds-listbox__item"
-        )[0];
-        firstOption.firstChild.classList.add("slds-is-selected");
+      // newValue = newValue.length ? newValue : this.options[0].value;
+      this.selectedOptions = [];
+      for (let opt of this.options) {
+        let option = this.template.querySelector(`[data-name="${opt.value}"]`);
+        if (newValue.includes(opt.value)) {
+          option.classList.add("slds-is-selected");
+          this.selectedOptions.push(opt);
+        } else if (option.classList.contains("slds-is-selected")) {
+          option.classList.remove("slds-is-selected");
+        }
       }
       this.sendValues(this.selectedOptions);
-    }
-  }
-
-  handleInitialSelections(initials) {
-    this.selectedOptions = [];
-    for (let initial of initials) {
-      try {
-        this.template
-          .querySelector(`[data-name="${initial.value}"]`)
-          .classList.add("slds-is-selected");
-        this.selectedOptions.push(initial);
-      } catch (err) {
-        continue;
-      }
+    } else {
+      this.selectedOptions = [];
     }
     this.setInputValue();
   }
 
-  handleDisabled() {
-    let input = this.template.querySelector("input");
-    if (input) {
-      input.disabled = this.disabled;
-      this._pills = this.pills && this.disabled ? !this.disabled : this._pills; //Remove pills when disabled
+  // Renders whenever the option is changed or the value is changed
+  renderedCallback() {
+    if (this.optionsChanged) {
+      this.updateSelectedOptions(this.selectedValues);
+      this.optionsChanged = false;
     }
   }
 
@@ -148,6 +125,7 @@ export default class MultiselectCombobox extends LightningElement {
     sldsCombobox.classList.toggle("slds-is-open");
   }
 
+  // Handles the selection event
   handleSelection(event) {
     let value = event.currentTarget.dataset.value;
     let selectedListBoxOptions =
@@ -171,6 +149,7 @@ export default class MultiselectCombobox extends LightningElement {
     for (const valueObject of selectedOptions) {
       values.push(valueObject.value);
     }
+    this.selectedValues = values;
     this.dispatchEvent(
       new CustomEvent("valuechange", {
         detail: values
@@ -178,6 +157,7 @@ export default class MultiselectCombobox extends LightningElement {
     );
   }
 
+  // This method handles the selection or unselection of the options
   handleOption(event, value) {
     let listBoxOption = event.currentTarget.firstChild;
     if (listBoxOption.classList.contains("slds-is-selected")) {
@@ -193,16 +173,18 @@ export default class MultiselectCombobox extends LightningElement {
     this.sendValues(this.selectedOptions);
   }
 
+  // Handles the setting up the place holder for the combobox input
   setInputValue() {
     if (this.selectedOptions.length > 1) {
       this.inputValue = this.selectedOptions.length + " options selected";
     } else if (this.selectedOptions.length === 1) {
       this.inputValue = this.selectedOptions[0].label;
     } else {
-      this.inputValue = "No option selected";
+      this.inputValue = "Select an Option";
     }
   }
 
+  // It closes the list on blur event
   handleBlur() {
     if (!this.dropDownInFocus) {
       this.closeDropbox();
@@ -217,13 +199,14 @@ export default class MultiselectCombobox extends LightningElement {
     this.dropDownInFocus = true;
   }
 
+  // This is to close the dropdown( we basically close it on onblur event)
   closeDropbox() {
     let sldsCombobox = this.template.querySelector(".slds-combobox");
     sldsCombobox.classList.remove("slds-is-open");
   }
 
-  // Pill Actions  ==> If you want to remove the pills, remove these methods
-
+  // Methods to control pills
+  // This method handles the removal of the pill
   removePill(event) {
     let deletedValue = event.detail.name;
     if (!(this.selectedOptions.length === 1) || this.zeroSelectionAllowed) {
@@ -231,6 +214,7 @@ export default class MultiselectCombobox extends LightningElement {
     }
   }
 
+  // This is to unselect an option when the pills of that option is removed
   unselectTheOption(deletedValue) {
     this.selectedOptions = this.selectedOptions.filter(
       (option) => option.value !== deletedValue

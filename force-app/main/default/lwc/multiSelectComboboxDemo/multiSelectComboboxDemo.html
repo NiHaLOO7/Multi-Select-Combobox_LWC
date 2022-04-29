@@ -2,21 +2,28 @@
   @description       : 
   @author            : ChangeMeIn@UserSettingsUnder.SFDoc
   @group             : 
-  @last modified on  : 04-11-2022
+  @last modified on  : 04-12-2022
   @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
 -->
 <template>
   <lightning-card title="Multi Select ComboBox">
     <c-multiselect-combobox
       options={cbOptions}
+      value={selectedOptions}
       onvaluechange={handleValueChange}
       label="Names"
       pills={pills}
       pill-icon="standard:user"
       zero-selection-allowed={zeroSelectionFlag}
-      initial-selections={initialSelections}
       disabled={disabled}
     >
     </c-multiselect-combobox>
+
+    <br />
+    <lightning-button
+      variant="brand"
+      label="button"
+      onclick={clickHandler}
+    ></lightning-button>
   </lightning-card>
 </template>

@@ -41,3 +41,9 @@ reports
 
 # Local environment variables
 .env
+
+# Mutation reports
+reports
+
+# stryker temp files
+.stryker-tmp
