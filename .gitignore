@@ -36,5 +36,8 @@ ehthumbs.db
 [Dd]esktop.ini
 $RECYCLE.BIN/
 
+# Mutation Reports
+reports
+
 # Local environment variables
 .env
