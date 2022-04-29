@@ -94,7 +94,7 @@ export default class MultiselectCombobox extends LightningElement {
   // This method updates the option selection depending on the values
   updateSelectedOptions(newValue) {
     if (this.options && this.options.length) {
-      newValue = newValue.length ? newValue : this.options[0].value;
+      // newValue = newValue.length ? newValue : this.options[0].value;
       this.selectedOptions = [];
       for (let opt of this.options) {
         let option = this.template.querySelector(`[data-name="${opt.value}"]`);

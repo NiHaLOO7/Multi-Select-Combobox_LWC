@@ -30,6 +30,7 @@ describe("c-multiselect-comboboxombobox test suite", () => {
         { label: "three", value: "3" },
         { label: "four", value: "4" }
       ];
+      element.value = ["1"];
       return flushPromises().then(() => {
         let pills = element.shadowRoot.querySelectorAll("lightning-pill");
         let pillIcon = element.shadowRoot.querySelector(
@@ -144,6 +145,7 @@ describe("c-multiselect-comboboxombobox test suite", () => {
           expect(opt.length).toBe(0);
           expect(selectedOpt.length).toBe(0);
           element.options = { label: "one", value: "1" };
+          element.value = ["1"];
           return flushPromises().then(() => {
             pills = element.shadowRoot.querySelectorAll("lightning-pill");
             opt = element.shadowRoot.querySelectorAll("li.slds-listbox__item");
@@ -326,6 +328,13 @@ describe("c-multiselect-comboboxombobox test suite", () => {
               expect(
                 element.shadowRoot.querySelector("[data-name='4']").classList
               ).not.toContain("slds-is-selected");
+              element.disabled = true;
+              return flushPromises().then(() => {
+                pills = element.shadowRoot.querySelector("lightning-pill");
+                input = element.shadowRoot.querySelector("input");
+                expect(input.disabled).toBe(true);
+                expect(pills).toBeNull();
+              });
             });
           });
         });
@@ -389,6 +398,78 @@ describe("c-multiselect-comboboxombobox test suite", () => {
                 combobox = element.shadowRoot.querySelector(".slds-combobox");
                 expect(combobox.classList).not.toContain("slds-is-open");
               });
+            });
+          });
+        });
+      });
+    });
+  });
+
+  it("test when value is not changed", () => {
+    const element = createElement("c-multiselect-combobox", {
+      is: MultiselectCombobox
+    });
+    document.body.appendChild(element);
+    return flushPromises().then(() => {
+      let opt = element.shadowRoot.querySelectorAll("li.slds-listbox__item");
+      let input = element.shadowRoot.querySelector("input");
+      const pill = element.shadowRoot.querySelector("lightning-pill");
+      let combobox = element.shadowRoot.querySelector(".slds-combobox");
+      expect(opt.length).toBe(0);
+      expect(input.disabled).toBe(false);
+      expect(input.value).toBe("Select an Option");
+      expect(combobox.classList).not.toContain("slds-is-open");
+      expect(pill).toBeNull();
+      element.pills = true;
+      element.value = ["1", "2"];
+      element.options = [
+        { label: "one", value: "1" },
+        { label: "two", value: "2" },
+        { label: "three", value: "3" },
+        { label: "four", value: "4" },
+        { label: "five", value: "5" }
+      ];
+      element.zeroSelectionAllowed = false;
+      const valuechangeEvent = jest.fn();
+      element.addEventListener("valuechange", valuechangeEvent);
+      return flushPromises().then(() => {
+        expect(valuechangeEvent).toHaveBeenCalled();
+        expect(valuechangeEvent.mock.calls[0][0].detail).toEqual(["1", "2"]);
+        input = element.shadowRoot.querySelector("input");
+        let selectedOpt =
+          element.shadowRoot.querySelectorAll(".slds-is-selected");
+        let pills = element.shadowRoot.querySelectorAll("lightning-pill");
+        expect(selectedOpt.length).toBe(2);
+        expect(input.value).toBe("2 options selected");
+        expect(pills.length).toBe(2);
+        element.value = ["1", "2"];
+        return flushPromises().then(() => {
+          input = element.shadowRoot.querySelector("input");
+          selectedOpt =
+            element.shadowRoot.querySelectorAll(".slds-is-selected");
+          pills = element.shadowRoot.querySelectorAll("lightning-pill");
+          expect(selectedOpt.length).toBe(2);
+          expect(input.value).toBe("2 options selected");
+          expect(pills.length).toBe(2);
+          element.value = [];
+          return flushPromises().then(() => {
+            input = element.shadowRoot.querySelector("input");
+            selectedOpt =
+              element.shadowRoot.querySelectorAll(".slds-is-selected");
+            pills = element.shadowRoot.querySelectorAll("lightning-pill");
+            expect(selectedOpt.length).toBe(2);
+            expect(input.value).toBe("2 options selected");
+            expect(pills.length).toBe(2);
+            element.zeroSelectionAllowed = true;
+            element.value = [];
+            return flushPromises().then(() => {
+              input = element.shadowRoot.querySelector("input");
+              selectedOpt =
+                element.shadowRoot.querySelectorAll(".slds-is-selected");
+              pills = element.shadowRoot.querySelectorAll("lightning-pill");
+              expect(selectedOpt.length).toBe(0);
+              expect(input.value).toBe("Select an Option");
+              expect(pills.length).toBe(0);
             });
           });
         });
